@@ -1,3 +1,4 @@
+from heapq import heapify,heappush,heappop
 
 n = int(input('Enter number of ppl: '))
 arr,names = [],[]
@@ -19,31 +20,35 @@ send,rec = [],[]
 for i in range(len(arr)):
     dev = arr[i]-mean
     if dev>0:
-        rec.append([dev,i])
+        rec.append((-dev,i))
         print(names[i],' should recieve ',dev)
     elif dev <0:
-        send.append([-dev,i])
+        send.append((dev,i))
         print(names[i],' should send ',-dev)
 
-rec.sort(reverse=True,key=lambda x:x[0])
-send.sort(reverse=True,key=lambda x:x[0])
-
+heapify(rec),heapify(send)
 print()
+printDict = {}
 delta = 0.1
-j=0
-for i in range(len(rec)):
-    while rec[i][0]> delta:
-        if j>=len(send):
-            break
-        if send[j][0] <= rec[i][0]:
-            amount = send[j][0]
-            rec[i][0] -= send[j][0]
-            print(names[send[j][1]],' should pay ',amount,' to ',names[rec[i][1]])
-            j+=1
+while len(rec):
+    hrec,hsend = heappop(rec),heappop(send)
+    maxrec,maxsend = (-hrec[0],hrec[1]),(-hsend[0],hsend[1]),
+    if maxsend[0] > maxrec[0]:
+        if maxsend[1] not in printDict:
+            printDict[maxsend[1]] = [(maxrec[0],maxrec[1])]
         else:
-            amount = rec[i][0]
-            send[j][0] -= rec[i][0]
-            rec[i][0] = 0
-            print(names[send[j][1]],' should pay ',amount,' to ',names[rec[i][1]])
+            printDict[maxsend[1]].append((maxrec[0],maxrec[1]))
+        elem = (-(maxsend[0]-maxrec[0]),maxsend[1])
+        heappush(send,elem)
+    else:
+        if maxsend[1] not in printDict:
+            printDict[maxsend[1]] = [(maxsend[0],maxrec[1])]
+        else:
+            printDict[maxsend[1]].append((maxsend[0],maxrec[1]))
+        elem = (-(maxrec[0]-maxsend[0]),maxrec[1])
+        if -elem[0] > delta:
+            heappush(rec,elem)
 
-
+for key in printDict:
+    for amount,rec in printDict[key]:
+        print(f'{names[key]} should pay {amount} to {names[rec]}')
